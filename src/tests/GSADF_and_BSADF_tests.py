@@ -1,4 +1,3 @@
-
 """
 GSADF Bubble Detection — Phillips, Shi & Yu (2015)
 Run: python gsadf_bubble_detection.py
@@ -15,13 +14,16 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ── 0. Load & resample to weekly ──────────────────────────────────────────────
-df = pd.read_csv("../data/merged_data.csv")
-df["date"] = pd.to_datetime(df["date"], dayfirst=True)
-df = df.sort_values("date").set_index("date")
+# Read directly with date as the index, drop NaNs, and safely parse mixed date formats
+df = pd.read_csv("merged_data_v2.csv", index_col='date')
+df.dropna(inplace=True)
+df.index = pd.to_datetime(df.index, format='mixed').normalize()
+df = df.sort_index()
 
-weekly = df[["btc_adj_close", "eth_adj_close", "sp500_adj_close"]].resample("W").last()
+# Resample to weekly ending on Friday (Only selecting BTC and ETH)
+weekly = df[["btc_adj_close", "eth_adj_close"]].resample("W-FRI").last()
 weekly = np.log(weekly)
-weekly.columns = ["BTC", "ETH", "S&P500"]
+weekly.columns = ["BTC", "ETH"]
 
 # ── 1. ADF t-stat (fast numpy OLS, no statsmodels overhead) ──────────────────
 def adf_tstat(y):
@@ -94,7 +96,6 @@ def date_stamp(bsadf_vals, cv_95, min_dur=5):
     return bubbles
 
 # ── 7. Run ────────────────────────────────────────────────────────────────────
-
 np.random.seed(42)
 r0_frac = 0.10
 N_BOOT  = 299
@@ -201,8 +202,3 @@ for asset, res in results.items():
     sig  = "***" if g > c[0.99] else "**" if g > c[0.95] else "*" if g > c[0.90] else "n.s."
     print(f"{asset:<8} {g:>8.3f} {c[0.90]:>8.3f} {c[0.95]:>8.3f} {c[0.99]:>8.3f}   {sig}")
 print("\n*** p<0.01  ** p<0.05  * p<0.10  n.s. not significant")
-
-import pickle
-
-with open("../output/models/gsadf_results.pkl", "wb") as f:
-    pickle.dump(results, f)
