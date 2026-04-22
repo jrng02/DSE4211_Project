@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 
 # ── 0. Load & resample to weekly ──────────────────────────────────────────────
 # Read directly with date as the index, drop NaNs, and safely parse mixed date formats
-df = pd.read_csv("merged_data_v2.csv", index_col='date')
+df = pd.read_csv("../data/merged_data_v2.csv", index_col='date')
 df.dropna(inplace=True)
 df.index = pd.to_datetime(df.index, format='mixed').normalize()
 df = df.sort_index()
@@ -202,3 +202,7 @@ for asset, res in results.items():
     sig  = "***" if g > c[0.99] else "**" if g > c[0.95] else "*" if g > c[0.90] else "n.s."
     print(f"{asset:<8} {g:>8.3f} {c[0.90]:>8.3f} {c[0.95]:>8.3f} {c[0.99]:>8.3f}   {sig}")
 print("\n*** p<0.01  ** p<0.05  * p<0.10  n.s. not significant")
+
+import pickle
+with open("../output/models/gsadf_results.pkl", "wb") as f:
+    pickle.dump(results, f)
