@@ -10,3 +10,4 @@ statsmodels==0.14.6
 tqdm==4.65.0
 xgboost==3.2.0
 yfinance==1.0
+mgarch==0.3.0
