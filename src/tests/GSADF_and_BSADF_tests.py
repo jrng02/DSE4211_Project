@@ -7,13 +7,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ── 0. Load & resample to Friday ─────────────────────────────────────────────
-df = pd.read_csv("merged_data_v2.csv")
+df = pd.read_csv("../data/merged_data_v2.csv")
 df["date"] = pd.to_datetime(df["date"], format='mixed')
 df = df.sort_values("date").set_index("date")
 
 # Changed "W" to "W-FRI" to anchor resampling on Fridays
 # Removed "sp500_adj_close"
-weekly = df[["btc_adj_close", "eth_adj_close"]].resample("W-FRI").last()
+weekly = df[["btc_adj_close", "eth_adj_close"]].resample("W").last()
 weekly = np.log(weekly)
 weekly.columns = ["BTC", "ETH"]
 
@@ -161,7 +161,7 @@ for row, (asset, res) in enumerate(results.items()):
         ax.tick_params(axis="x", rotation=30)
         ax.grid(alpha=0.25)
 
-    ax_p.set_title(f"{asset} — Weekly Price (Fri)", fontweight="bold")
+    ax_p.set_title(f"{asset} — Weekly Price (Sun)", fontweight="bold")
     ax_p.set_ylabel("Price (USD)")
     ax_b.set_title(f"{asset} — BSADF", fontweight="bold")
     ax_b.set_ylabel("t-stat")
@@ -171,7 +171,7 @@ for row, (asset, res) in enumerate(results.items()):
     ax_b.set_xlabel(f"GSADF={g:.3f}  CV95%={c95:.3f}  [{sig}]", fontsize=8.5, color="dimgray")
 
 plt.tight_layout()
-plt.savefig("gsadf_crypto_friday.png", dpi=150, bbox_inches="tight")
+plt.savefig("../output/figures/gsadf_crypto.png", dpi=150, bbox_inches="tight")
 
 # ── 9. Summary table ──────────────────────────────────────────────────────────
 print("\n" + "="*60)
@@ -183,3 +183,7 @@ for asset, res in results.items():
     g, c = res["gsadf_stat"], res["gsadf_cv"]
     sig  = "***" if g > c[0.99] else "**" if g > c[0.95] else "*" if g > c[0.90] else "n.s."
     print(f"{asset:<8} {g:>8.3f} {c[0.90]:>8.3f} {c[0.95]:>8.3f} {c[0.99]:>8.3f}   {sig}")
+
+import pickle
+with open("../output/models/gsadf_results.pkl", "wb") as f:
+    pickle.dump(results, f)
