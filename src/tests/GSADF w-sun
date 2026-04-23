@@ -14,7 +14,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # ── 0. Load & resample to weekly ──────────────────────────────────────────────
-df = pd.read_csv("merged_data.csv")
+df = pd.read_csv("merged_data_v2.csv")
 df["date"] = pd.to_datetime(df["date"], dayfirst=True)
 df = df.sort_values("date").set_index("date")
 
