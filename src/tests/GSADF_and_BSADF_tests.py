@@ -1,10 +1,3 @@
-"""
-GSADF Bubble Detection — Phillips, Shi & Yu (2015)
-Run: python gsadf_bubble_detection.py
-
-Resamples daily data to weekly to keep runtime manageable (~5-10 min).
-"""
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,21 +6,19 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
-# ── 0. Load & resample to weekly ──────────────────────────────────────────────
-# Read directly with date as the index, drop NaNs, and safely parse mixed date formats
-df = pd.read_csv("../data/merged_data_v2.csv", index_col='date')
-df.dropna(inplace=True)
-df.index = pd.to_datetime(df.index, format='mixed').normalize()
-df = df.sort_index()
+# ── 0. Load & resample to Friday ─────────────────────────────────────────────
+df = pd.read_csv("merged_data_v2.csv")
+df["date"] = pd.to_datetime(df["date"], format='mixed')
+df = df.sort_values("date").set_index("date")
 
-# Resample to weekly ending on Friday (Only selecting BTC and ETH)
+# Changed "W" to "W-FRI" to anchor resampling on Fridays
+# Removed "sp500_adj_close"
 weekly = df[["btc_adj_close", "eth_adj_close"]].resample("W-FRI").last()
 weekly = np.log(weekly)
 weekly.columns = ["BTC", "ETH"]
 
-# ── 1. ADF t-stat (fast numpy OLS, no statsmodels overhead) ──────────────────
+# ── 1. ADF t-stat (fast numpy OLS) ───────────────────────────────────────────
 def adf_tstat(y):
-    """Right-tailed ADF: Δy = α + β·y_{t-1} + ε  →  t-stat on β"""
     n = len(y)
     if n < 6:
         return np.nan
@@ -47,7 +38,6 @@ def adf_tstat(y):
 
 # ── 2. BSADF sequence ─────────────────────────────────────────────────────────
 def bsadf_sequence(y, r0):
-    """BSADF(r2) = sup_{r1} ADF(y[r1:r2]),  r2 = 2r0…T"""
     T   = len(y)
     seq = np.full(T - 2 * r0 + 1, np.nan)
     for i, r2 in enumerate(range(2 * r0, T + 1)):
@@ -103,14 +93,13 @@ MIN_DUR = 5
 results = {}
 
 for asset in weekly.columns:
-    print(f"\n{'='*50}\n  {asset}\n{'='*50}")
+    print(f"\n{'='*50}\n  {asset} (Friday Close)\n{'='*50}")
     series = weekly[asset].dropna()
     y, dates = series.values, series.index
     T  = len(y)
     r0 = max(int(r0_frac * T), 15)
     print(f"  Weekly obs={T}   r0={r0} weeks")
 
-    # GSADF test
     print("  GSADF...", end=" ", flush=True)
     g_stat = gsadf(y, r0)
     print(f"{g_stat:.4f}")
@@ -120,7 +109,6 @@ for asset in weekly.columns:
         tag = " <--" if g_stat > g_cv[q] else ""
         print(f"    CV {int(q*100)}%: {g_cv[q]:.4f}{tag}")
 
-    # BSADF + date-stamping
     print("  BSADF sequence...", end=" ", flush=True)
     bsadf_seq = bsadf_sequence(y, r0)
     print("done")
@@ -148,9 +136,10 @@ for asset in weekly.columns:
 # ── 8. Plot ───────────────────────────────────────────────────────────────────
 n = len(results)
 fig, axes = plt.subplots(n, 2, figsize=(18, 5.5 * n))
-fig.suptitle("GSADF Bubble Detection — Phillips, Shi & Yu (2015) [Weekly]",
+fig.suptitle("GSADF Bubble Detection — Crypto Assets [Weekly Friday Close]",
              fontsize=14, fontweight="bold")
 
+# Adjusting axes iteration for 2 assets
 for row, (asset, res) in enumerate(results.items()):
     ax_p, ax_b = axes[row, 0], axes[row, 1]
     dates_pd = pd.to_datetime(res["dates"])
@@ -172,28 +161,21 @@ for row, (asset, res) in enumerate(results.items()):
         ax.tick_params(axis="x", rotation=30)
         ax.grid(alpha=0.25)
 
-    ax_p.set_title(f"{asset} — Weekly Price", fontweight="bold")
+    ax_p.set_title(f"{asset} — Weekly Price (Fri)", fontweight="bold")
     ax_p.set_ylabel("Price (USD)")
-    handles, labels = ax_p.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    if by_label:
-        ax_p.legend(by_label.values(), by_label.keys(), fontsize=8)
-
     ax_b.set_title(f"{asset} — BSADF", fontweight="bold")
     ax_b.set_ylabel("t-stat")
-    ax_b.legend(fontsize=8, loc="upper left")
-
+    
     g, c95 = res["gsadf_stat"], res["gsadf_cv"][0.95]
     sig = "significant at 5%" if g > c95 else "not significant"
     ax_b.set_xlabel(f"GSADF={g:.3f}  CV95%={c95:.3f}  [{sig}]", fontsize=8.5, color="dimgray")
 
 plt.tight_layout()
-plt.savefig("gsadf_bubble_detection.png", dpi=150, bbox_inches="tight")
-print("\nPlot saved → gsadf_bubble_detection.png")
+plt.savefig("gsadf_crypto_friday.png", dpi=150, bbox_inches="tight")
 
 # ── 9. Summary table ──────────────────────────────────────────────────────────
 print("\n" + "="*60)
-print("  GSADF TEST SUMMARY")
+print("  GSADF TEST SUMMARY (FRIDAY CLOSE)")
 print("="*60)
 print(f"{'Asset':<8} {'GSADF':>8} {'CV90':>8} {'CV95':>8} {'CV99':>8}  Sig")
 print("-"*60)
@@ -201,8 +183,3 @@ for asset, res in results.items():
     g, c = res["gsadf_stat"], res["gsadf_cv"]
     sig  = "***" if g > c[0.99] else "**" if g > c[0.95] else "*" if g > c[0.90] else "n.s."
     print(f"{asset:<8} {g:>8.3f} {c[0.90]:>8.3f} {c[0.95]:>8.3f} {c[0.99]:>8.3f}   {sig}")
-print("\n*** p<0.01  ** p<0.05  * p<0.10  n.s. not significant")
-
-import pickle
-with open("../output/models/gsadf_results.pkl", "wb") as f:
-    pickle.dump(results, f)
