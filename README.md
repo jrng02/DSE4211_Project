@@ -4,6 +4,19 @@ This repository contains the code and outputs for our DSE4211 research project
 examining volatility spillovers from cryptocurrency markets to U.S. equity and 
 bond markets, with a focus on the role of speculative bubble periods.
 
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Repository Structure](#repository-structure)
+- [Methodology](#methodology)
+- [Requirements](#requirements)
+  - [Prerequisites](#prerequisites)
+  - [Setting up Virtual Environment](#setting-up-virtual-environment)
+  - [Installing Dependencies](#installing-dependencies)
+- [Code Usage](#code-usage)
+- [Notebook Outputs](#notebook-outputs)
+- [Contributors](#contributors)
+
 ## Project Overview
 
 We investigate whether volatility transmission between crypto and traditional 
@@ -66,6 +79,42 @@ requirements.txt       Python dependencies
    regime indicators
 
 ## Requirements
+
+### Prerequisites
+- Python 3.10 or higher
+
+### Setting up Virtual Environment
+
+It is recommended to use a virtual environment to manage dependencies.
+
+#### **Windows**
+
+1. Command Prompt:
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+2. PowerShell:
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+3. Git Bash:
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+```
+
+#### **macOS/Linux**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Installing Dependencies
+Once the virtual environment is activated, install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
@@ -74,12 +123,10 @@ pip install -r requirements.txt
 
 To reproduce the analysis, follow these steps in order:
 
-1. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. **Set up Virtual Environment and Install Dependencies**  
+   Follow the instructions in the [Requirements](#requirements) section above to create and activate a virtual environment, then install dependencies.
 
-2. **Run Notebooks in Sequence**
+2. **Run Notebooks in Sequence**  
    Execute the Jupyter notebooks in the `notebooks/` folder in numerical order:
 
    - `01_data_prep.ipynb`: Data preparation and preprocessing
