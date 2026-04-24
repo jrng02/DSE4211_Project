@@ -12,15 +12,46 @@ detection, GARCH volatility modelling, and VAR-based spillover analysis.
 
 ## Repository Structure
 ```
-data/                   Raw and merged datasets
-notebooks/              Jupyter notebooks for analysis
-src/                    Supporting source files
-output/                 Generated figures and results
-GSADF_and_BSADF_tests.py          Bubble detection (PSY 2015 test)
-Volatility Modelling - GARCH.ipynb GARCH family model estimation
-VAR Analysis.ipynb                 VAR and Granger causality analysis
-Realized_Volatility_XGBoost.ipynb  XGBoost volatility forecasting
-garch_functions.py                 GARCH helper functions
+data/                  Raw and processed datasets
+├── merged_data_v2.csv Merged dataset (latest version)
+└── raw/               Raw data files
+    ├── agg_bond_data.csv
+    ├── btc_data.csv
+    ├── eth_data.csv
+    ├── merged_data.csv
+    ├── sp500_data.csv
+    ├── tlt_data.csv
+    ├── ty_data.csv
+    └── vti_data.csv
+notebooks/             Jupyter notebooks for analysis
+├── 01_data_prep.ipynb       Data preparation
+├── 02_garch_modelling.ipynb GARCH volatility modelling
+├── 03_var_analysis.ipynb    VAR spillover analysis
+└── 04_xgboost_vol.ipynb     XGBoost volatility forecasting
+output/                Generated figures, models, and tables
+├── figures/           Charts and plots
+│   └── old/           Archived figures
+├── models/            Saved model files
+│   └── old/           Archived models
+└── tables/            Summary statistics and results
+    ├── descriptive_stats_log_prices.csv
+    ├── descriptive_stats_log_returns.csv
+    ├── xgboost_cv_results_btc.csv
+    ├── xgboost_cv_results_eth.csv
+    ├── xgboost_feature_importance.csv
+    ├── xgboost_summary_metrics.csv
+    └── old/            Archived tables
+        ├── descriptive_stats_log_prices.csv
+        └── descriptive_stats_log_returns.csv
+src/                   Source code and utilities
+├── models/            Model implementations
+│   └── garch_functions.py
+└── tests/             Test scripts and bubble detection
+    ├── GSADF w-sun
+    ├── GSADF_and_BSADF_tests.py
+    └── old/
+requirements.txt       Python dependencies
+
 ```
 
 ## Methodology
@@ -36,8 +67,46 @@ garch_functions.py                 GARCH helper functions
 
 ## Requirements
 ```bash
-pip install numpy pandas matplotlib statsmodels arch xgboost tqdm jupyter
+pip install -r requirements.txt
 ```
+
+## Code Usage
+
+To reproduce the analysis, follow these steps in order:
+
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run Notebooks in Sequence**
+   Execute the Jupyter notebooks in the `notebooks/` folder in numerical order:
+
+   - `01_data_prep.ipynb`: Data preparation and preprocessing
+     - Pulls data from Yahoo Finance 
+     - Performs data cleaning and merging
+     - Outputs processed data to `data/` 
+     - `merged_data_v2.csv` used for downstream analysis
+     - Saves CSV files and figures to `output/`
+
+   - `02_garch_modelling.ipynb`: GARCH volatility modelling
+     - Estimates conditional volatility using GARCH family models
+     - Runs `GSADF_and_BSADF_tests.py` for bubble detection
+     - Saves model results and figures to `output/`
+
+   - `03_var_analysis.ipynb`: VAR spillover analysis
+     - Performs Vector Autoregression analysis
+     - Tests for Granger causality and volatility spillovers
+     - Generates spillover plots and tables in `output/`
+
+   - `04_xgboost_vol.ipynb`: XGBoost volatility forecasting
+     - Trains XGBoost models for volatility prediction
+     - Incorporates bubble regime indicators
+     - Saves cross-validation results and feature importance to `output/tables/`
+
+All generated outputs (figures, models, tables) are saved to the `output/` directory.
+
+
 
 ## Contributors
 
