@@ -43,26 +43,20 @@ notebooks/             Jupyter notebooks for analysis
 └── 04_xgboost_vol.ipynb     XGBoost volatility forecasting
 output/                Generated figures, models, and tables
 ├── figures/           Charts and plots
-│   └── old/           Archived figures
 ├── models/            Saved model files
-│   └── old/           Archived models
 └── tables/            Summary statistics and results
     ├── descriptive_stats_log_prices.csv
     ├── descriptive_stats_log_returns.csv
     ├── xgboost_cv_results_btc.csv
     ├── xgboost_cv_results_eth.csv
     ├── xgboost_feature_importance.csv
-    ├── xgboost_summary_metrics.csv
-    └── old/            Archived tables
-        ├── descriptive_stats_log_prices.csv
-        └── descriptive_stats_log_returns.csv
+    └── xgboost_summary_metrics.csv
 src/                   Source code and utilities
 ├── models/            Model implementations
 │   └── garch_functions.py
 └── tests/             Test scripts and bubble detection
     ├── GSADF w-sun
-    ├── GSADF_and_BSADF_tests.py
-    └── old/
+    └── GSADF_and_BSADF_tests.py
 requirements.txt       Python dependencies
 
 ```
